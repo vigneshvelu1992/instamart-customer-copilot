@@ -1,4 +1,4 @@
-# Instamart Customer Intelligence & Support Copilot
+﻿# Instamart Customer Intelligence & Support Copilot
 
 ## Overview
 
@@ -6,10 +6,10 @@ This project develops an end-to-end customer intelligence and support copilot fo
 
 The project is divided into four parts:
 
-- **Part A – Data Foundation:** Data auditing, cleaning, SQLite database creation, SQL queries and exploratory data analysis.
-- **Part B – Customer Segments and Lapse Prediction:** RFM analysis, K-means clustering, customer segmentation and machine-learning-based lapse prediction.
-- **Part C – Support Ticket Triage with Guardrails:** Privacy-safe, resilient and cost-aware support-ticket classification and routing.
-- **Part D – Policy RAG Assistant and Refund Agent:** Retrieval-grounded policy assistance and a tool-based refund agent.
+- **Part A â€“ Data Foundation:** Data auditing, cleaning, SQLite database creation, SQL queries and exploratory data analysis.
+- **Part B â€“ Customer Segments and Lapse Prediction:** RFM analysis, K-means clustering, customer segmentation and machine-learning-based lapse prediction.
+- **Part C â€“ Support Ticket Triage with Guardrails:** Privacy-safe, resilient and cost-aware support-ticket classification and routing.
+- **Part D â€“ Policy RAG Assistant and Refund Agent:** Retrieval-grounded policy assistance and a tool-based refund agent.
 
 All model interactions use the supplied offline mock language model. No paid API or external model service is required.
 
@@ -127,7 +127,7 @@ The following commands reproduce the currently completed Parts A and B. Part C a
     python src/part_b_model_insights.py
     ```
 
-## Part A – Data Foundation: Clean, Store, Query
+## Part A â€“ Data Foundation: Clean, Store, Query
 
 ### Objective
 
@@ -145,7 +145,7 @@ Audit and clean the raw customer, product and order datasets, store the cleaned 
 | Negative delivery times | 106 |
 | Blank delivery times | 2,541 |
 | Blank customer ages | 61 |
-| Customer ages outside 10–100 | 6 |
+| Customer ages outside 10â€“100 | 6 |
 | Distinct raw city spellings | 24 |
 | Distinct non-blank gender spellings | 10 |
 | Blank gender values | 30 |
@@ -197,7 +197,7 @@ SQL business analysis is maintained in `sql/queries.sql`.
 
 The weak correlation does not establish a causal relationship.
 
-## Part B – Customer Segments and Lapse Prediction
+## Part B â€“ Customer Segments and Lapse Prediction
 
 ### Objective
 
@@ -347,68 +347,7 @@ The retention list contains the 10 Premium customers in the test set with the hi
 - `outputs/lapse_model.joblib`
 - `outputs/retention_list.csv`
 
-## Part C – Support Ticket Triage with Guardrails
-
-**Status: Pending implementation.**
-
-This part will implement a support-ticket triage pipeline with:
-
-- Input guardrails for empty and excessively long tickets.
-- Redaction of email addresses, phone numbers and order IDs.
-- Zero-shot and few-shot classification prompts.
-- Retry handling with exponential backoff and jitter.
-- JSON and keyword-based output validation.
-- Token-budget enforcement.
-- Routing based on ticket category and Premium customer status.
-
-Required outputs:
-
-- `outputs/triage_results.csv`
-- `outputs/triage_budget_demo.csv`
-
-Results and validation statistics will be added after implementation.
-
-## Part D – Policy RAG Assistant and Refund Agent
-
-**Status: Pending implementation.**
-
-This part will implement:
-
-- Policy document chunking and TF-IDF retrieval.
-- Retrieval-grounded question answering.
-- Fallback handling for unsupported questions.
-- A ReAct-style refund agent.
-- Order lookup and policy search tools.
-- Refund calculation and escalation.
-- Checkpointing and crash recovery.
-
-Required outputs:
-
-- `outputs/agent_runs.jsonl`
-- `outputs/refund_ledger.jsonl`
-- `state/` checkpoint directory.
-
-Scenario results, fallback demonstrations and crash-resume results will be documented after implementation.
-
-## Limitations and Next Steps
-
-### Current limitations
-
-1. The Premium flag is based on whole-window RFM segmentation, which includes activity from September 2025. Consequently, the Premium retention list is illustrative and may contain post-cutoff information. The lapse model itself uses only pre-cutoff features.
-2. The negative Logistic Regression recency coefficient is counterintuitive and should be interpreted cautiously. Model coefficients describe associations, not causal effects.
-3. The lapse model is trained on synthetic data and should be validated on real-world data before production use.
-4. The retention list contains predicted lapse probabilities, not guaranteed future customer behaviour.
-
-### Next steps
-
-- Complete Part C support-ticket triage and privacy guardrails.
-- Complete Part D policy retrieval and refund-agent workflows.
-- Add all remaining execution commands and validation results to the Reproduce section.
-- Run the complete project from a clean clone to verify reproducibility.
-- Review the final repository contents and all required deliverables before submission.
-
-
-## Part C — Support Ticket Triage with Guardrails
+## Part C â€” Support Ticket Triage with Guardrails
 
 ### Objective
 
@@ -421,7 +360,7 @@ Processed 164 tickets in their original input order.
 - **Empty tickets:** 4 skipped without a model call.
 - **Long tickets:** 4 flagged for review because their estimated input length exceeded the 400-token limit.
 - **Eligible tickets:** 156.
-- **PII redaction:** 55 email addresses, 91 phone numbers, and 132 order IDs replaced with placeholders — 278 matches in total.
+- **PII redaction:** 55 email addresses, 91 phone numbers, and 132 order IDs replaced with placeholders â€” 278 matches in total.
 - **PII verification:** Zero matching email, phone, or order-ID patterns remained in the redacted ticket text.
 
 The user message sent to the model contains only the redacted ticket text. The supplied `mock_llm.py` was not modified, and no external LLM API was used.
@@ -597,3 +536,20 @@ Part D source scripts:
 - `src/part_d_refund_agent.py`
 - `src/part_d_agent_comparison.py`
 
+
+## Limitations and Next Steps
+
+### Current limitations
+
+1. The Premium flag is based on whole-window RFM segmentation, which includes activity from September 2025. Consequently, the Premium retention list is illustrative and may contain post-cutoff information. The lapse model itself uses only pre-cutoff features.
+2. The negative Logistic Regression recency coefficient is counterintuitive and should be interpreted cautiously. Model coefficients describe associations, not causal effects.
+3. The lapse model is trained on synthetic data and should be validated on real-world data before production use.
+4. The retention list contains predicted lapse probabilities, not guaranteed future customer behaviour.
+
+### Next steps
+
+- Complete Part C support-ticket triage and privacy guardrails.
+- Complete Part D policy retrieval and refund-agent workflows.
+- Add all remaining execution commands and validation results to the Reproduce section.
+- Run the complete project from a clean clone to verify reproducibility.
+- Review the final repository contents and all required deliverables before submission.

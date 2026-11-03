@@ -1,13 +1,7 @@
-
 from pathlib import Path
 import sys
-import re
 
 import pandas as pd
-
-# ---------------------------------------------------------
-# Paths and project imports
-# ---------------------------------------------------------
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -21,27 +15,16 @@ from part_d_refund_agent import (
     get_order,
     search_policy,
     calculate_refund,
-    MAX_STEPS,
+    MAX_ITERATIONS,
+    load_scenarios,
 )
 
 COMPARISON_PATH = OUTPUT_DIR / "agent_architecture_comparison.csv"
 SUMMARY_PATH = OUTPUT_DIR / "agent_architecture_summary.csv"
 
 
-# ---------------------------------------------------------
-# Plan-and-Execute simulation
-# ---------------------------------------------------------
-
 def plan_and_execute(scenario):
-    """
-    Read-only Plan-and-Execute simulation.
-
-    The planner creates a sequence of steps first.
-    The executor then checks the order and policy, calculates
-    eligibility, and determines the safe next action.
-
-    This function does not write to the refund ledger.
-    """
+    """Read-only Plan-and-Execute simulation."""
 
     scenario_id = str(scenario["scenario_id"])
     message = str(scenario["message"])
@@ -58,16 +41,15 @@ def plan_and_execute(scenario):
         "explanation": "",
     }
 
-    # Simulate a repeated-action request and apply the step guard.
+    # Repeated-action scenario.
     if "[LOOP]" in message:
         result.update({
-            "plan_execute_status": "step_limit",
-            "planning_steps": 1,
-            "execution_tool_calls": MAX_STEPS - 2,
-            "finalization_steps": 1,
+            "plan_execute_status": "FALLBACK_MAX_ITERATIONS",
+            "execution_tool_calls": MAX_ITERATIONS - 2,
             "planned_actions": "Detect repeated action; stop safely",
             "explanation": (
-                "Repeated-action scenario stopped by the maximum-step guard."
+                "The planned execution was stopped by the "
+                "maximum-iteration guard."
             ),
         })
 
@@ -76,117 +58,127 @@ def plan_and_execute(scenario):
             + result["execution_tool_calls"]
             + result["finalization_steps"]
         )
+
         return result
+
+    # Find order ID.
+    import re
 
     match = re.search(r"ORD-\d{6}", message)
 
     if not match:
         result.update({
-            "plan_execute_status": "needs_info",
-            "planned_actions": "Request order ID",
-            "explanation": "No valid order ID was present in the request.",
+            "plan_execute_status": "NOT_FOUND",
+            "planned_actions": "Request a valid order ID",
+            "explanation": "No valid order ID was present.",
         })
         result["plan_execute_total_steps"] = 2
         return result
 
     order_id = match.group(0)
 
-    # Execute step 1: verify the order.
+    # Step 1: Look up order.
     result["execution_tool_calls"] += 1
     order = get_order(order_id)
 
     if order.get("error"):
         result.update({
-            "plan_execute_status": "order_not_found",
+            "plan_execute_status": "NOT_FOUND",
             "planned_actions": "Look up order; stop if missing",
-            "explanation": "The order could not be found in SQLite.",
+            "explanation": "The order was not found in SQLite.",
         })
+
         result["plan_execute_total_steps"] = (
             result["planning_steps"]
             + result["execution_tool_calls"]
             + result["finalization_steps"]
         )
+
         return result
 
-    # Execute step 2: retrieve relevant policy information.
+    # Step 2: Retrieve policy.
     result["execution_tool_calls"] += 1
     policy = search_policy("refund policy late delivery")
 
-    if not policy.get("found"):
+    if not policy.get("results"):
         result.update({
-            "plan_execute_status": "human_review",
-            "planned_actions": "Look up order; search policy; escalate",
-            "explanation": "No matching policy text was found.",
+            "plan_execute_status": "FALLBACK_POLICY",
+            "planned_actions": "Look up order; search policy; stop",
+            "explanation": "No relevant policy chunks were retrieved.",
         })
+
         result["plan_execute_total_steps"] = (
             result["planning_steps"]
             + result["execution_tool_calls"]
             + result["finalization_steps"]
         )
+
         return result
 
-    # Only completed orders are eligible for this demo.
+    # Only completed orders are eligible.
     if order["status"] != "completed":
         result.update({
-            "plan_execute_status": "denied",
+            "plan_execute_status": "DENIED",
             "planned_actions": "Look up order; check policy; deny",
-            "explanation": "Only completed orders can be refunded.",
+            "explanation": "Only completed orders are eligible.",
         })
+
         result["plan_execute_total_steps"] = (
             result["planning_steps"]
             + result["execution_tool_calls"]
             + result["finalization_steps"]
         )
+
         return result
 
-    # Execute step 3: calculate eligibility from verified data.
+    # Step 3: Calculate refund.
     result["execution_tool_calls"] += 1
 
     decision = calculate_refund(
-        order.get("order_amount"),
-        order.get("delivery_minutes"),
+        order["order_amount"],
+        order["delivery_minutes"],
     )
 
     result["plan_execute_refund_inr"] = float(
-        decision.get("refund_inr", 0.0)
+        decision["refund_inr"]
     )
 
     if decision["decision"] == "denied":
         result.update({
-            "plan_execute_status": "denied",
+            "plan_execute_status": "DENIED",
             "planned_actions": (
-                "Look up order; check policy; calculate; deny"
+                "Look up order; retrieve policy; calculate; deny"
             ),
             "explanation": decision["reason"],
         })
 
     elif decision["decision"] == "human_review":
         result.update({
-            "plan_execute_status": "human_review",
+            "plan_execute_status": "ESCALATE",
             "planned_actions": (
-                "Look up order; check policy; calculate; escalate"
+                "Look up order; retrieve policy; calculate; escalate"
             ),
             "explanation": decision["reason"],
         })
 
     elif decision["decision"] == "eligible":
-        # Simulate the action, without writing to the ledger.
         result["execution_tool_calls"] += 1
+
         result.update({
-            "plan_execute_status": "refund_response",
+            "plan_execute_status": "REFUND",
             "planned_actions": (
-                "Look up order; check policy; calculate; "
-                "validate refund; simulate issue"
+                "Look up order; retrieve policy; calculate; "
+                "validate; simulate refund"
             ),
             "explanation": (
-                "Refund meets the demo eligibility rules. "
-                "No ledger entry was written by this comparison."
+                "Refund qualifies under the demo rules. "
+                "No ledger entry is written by this comparison."
             ),
         })
 
     else:
         result.update({
-            "plan_execute_status": "human_review",
+            "plan_execute_status": "FALLBACK_POLICY",
             "planned_actions": "Stop and request human review",
             "explanation": "Unrecognized decision; fail safely.",
         })
@@ -200,54 +192,36 @@ def plan_and_execute(scenario):
     return result
 
 
-# ---------------------------------------------------------
-# Compare both approaches on the same scenarios
-# ---------------------------------------------------------
-
 def main():
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     if not RESULTS_PATH.exists():
         raise FileNotFoundError(
-            f"ReAct results not found: {RESULTS_PATH}\n"
-            "Run src/part_d_refund_agent.py first."
+            "ReAct results not found. Run part_d_refund_agent.py first."
         )
 
     if not SCENARIOS_PATH.exists():
-        raise FileNotFoundError(
-            f"Scenario file not found: {SCENARIOS_PATH}"
-        )
+        raise FileNotFoundError(SCENARIOS_PATH)
 
-    react = pd.read_csv(RESULTS_PATH).fillna({
-        "order_id": "",
-        "agent_response": "",
-        "refund_inr": 0,
-        "tool_steps": 0,
-    })
-
-    # Use the scenario loader from the existing agent module.
-    from part_d_refund_agent import load_scenarios
-
-    scenarios = load_scenarios()
-
+    react = pd.read_csv(RESULTS_PATH)
     react["scenario_id"] = react["scenario_id"].astype(str)
 
     react_lookup = react.set_index("scenario_id").to_dict(
         orient="index"
     )
 
+    scenarios = load_scenarios()
     rows = []
 
     for scenario in scenarios:
         scenario_id = str(scenario["scenario_id"])
-        react_result = react_lookup.get(scenario_id)
 
-        if react_result is None:
+        if scenario_id not in react_lookup:
             raise ValueError(
-                f"Missing ReAct result for {scenario_id}. "
-                "Rerun the refund agent before comparing."
+                f"Missing ReAct result for {scenario_id}"
             )
 
+        react_result = react_lookup[scenario_id]
         plan_result = plan_and_execute(scenario)
 
         react_status = str(react_result["status"])
@@ -264,7 +238,13 @@ def main():
             "plan_execute_refund_inr": float(
                 plan_result["plan_execute_refund_inr"]
             ),
-            "react_loop_turns": int(
+            "react_model_calls": int(
+                react_result.get("llm_calls", 0) or 0
+            ),
+            "react_tokens_used": int(
+                react_result.get("tokens_used", 0) or 0
+            ),
+            "react_tool_steps": int(
                 react_result.get("tool_steps", 0) or 0
             ),
             "plan_execute_planning_steps": int(
@@ -304,14 +284,17 @@ def main():
             ),
         },
         {
-            "metric": "Average ReAct loop turns",
-            "react": round(
-                comparison["react_loop_turns"].mean(), 2
-            ),
+            "metric": "Total ReAct model calls",
+            "react": int(comparison["react_model_calls"].sum()),
             "plan_execute": None,
         },
         {
-            "metric": "Average Plan-and-Execute total steps",
+            "metric": "Total ReAct tokens",
+            "react": int(comparison["react_tokens_used"].sum()),
+            "plan_execute": None,
+        },
+        {
+            "metric": "Average Plan-and-Execute steps",
             "react": None,
             "plan_execute": round(
                 comparison["plan_execute_total_steps"].mean(), 2
@@ -319,42 +302,41 @@ def main():
         },
         {
             "metric": "Automatic refund outcomes",
+            "react": int((comparison["react_status"] == "REFUND").sum()),
+            "plan_execute": int(
+                (comparison["plan_execute_status"] == "REFUND").sum()
+            ),
+        },
+        {
+            "metric": "Human escalation outcomes",
             "react": int(
-                (comparison["react_status"] == "refund_response").sum()
+                (comparison["react_status"] == "ESCALATE").sum()
+            ),
+            "plan_execute": int(
+                (comparison["plan_execute_status"] == "ESCALATE").sum()
+            ),
+        },
+        {
+            "metric": "Maximum-iteration fallbacks",
+            "react": int(
+                (
+                    comparison["react_status"]
+                    == "FALLBACK_MAX_ITERATIONS"
+                ).sum()
             ),
             "plan_execute": int(
                 (
                     comparison["plan_execute_status"]
-                    == "refund_response"
+                    == "FALLBACK_MAX_ITERATIONS"
                 ).sum()
-            ),
-        },
-        {
-            "metric": "Human-review outcomes",
-            "react": int(
-                (comparison["react_status"] == "human_review").sum()
-            ),
-            "plan_execute": int(
-                (
-                    comparison["plan_execute_status"]
-                    == "human_review"
-                ).sum()
-            ),
-        },
-        {
-            "metric": "Safe loop stops",
-            "react": int(
-                (comparison["react_status"] == "step_limit").sum()
-            ),
-            "plan_execute": int(
-                (comparison["plan_execute_status"] == "step_limit").sum()
             ),
         },
     ])
 
     summary.to_csv(SUMMARY_PATH, index=False)
 
-    print("\n--- Scenario-by-scenario comparison ---")
+    print("\n--- ReAct vs Plan-and-Execute ---")
+
     print(
         comparison[
             [
@@ -362,7 +344,8 @@ def main():
                 "react_status",
                 "plan_execute_status",
                 "outcome_match",
-                "react_loop_turns",
+                "react_model_calls",
+                "react_tokens_used",
                 "plan_execute_total_steps",
             ]
         ].to_string(index=False)
@@ -371,12 +354,14 @@ def main():
     print("\n--- Summary ---")
     print(summary.to_string(index=False))
 
-    print(f"\nComparison saved to: {COMPARISON_PATH}")
-    print(f"Summary saved to: {SUMMARY_PATH}")
+    print("\nSaved:")
+    print(COMPARISON_PATH)
+    print(SUMMARY_PATH)
+
     print(
         "\nNote: Plan-and-Execute is a deterministic, read-only "
-        "simulation. Its step counts are not directly equivalent "
-        "to ReAct model turns or token usage."
+        "simulation. Its execution steps are not equivalent to "
+        "ReAct model calls or token usage."
     )
 
 

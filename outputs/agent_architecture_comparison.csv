@@ -1,8 +1,8 @@
-scenario_id,react_status,plan_execute_status,outcome_match,react_refund_inr,plan_execute_refund_inr,react_loop_turns,plan_execute_planning_steps,plan_execute_tool_calls,plan_execute_total_steps,planned_actions,explanation
-S1,refund_response,refund_response,True,128.25,128.25,5,1,4,6,Look up order; check policy; calculate; validate refund; simulate issue,Refund meets the demo eligibility rules. No ledger entry was written by this comparison.
-S2,refund_response,refund_response,True,135.0,135.0,5,1,4,6,Look up order; check policy; calculate; validate refund; simulate issue,Refund meets the demo eligibility rules. No ledger entry was written by this comparison.
-S3,human_review,human_review,True,1999.0,1999.0,5,1,3,5,Look up order; check policy; calculate; escalate,"Refund exceeds the INR 1,000 automatic limit."
-S4,denied,denied,True,0.0,0.0,4,1,3,5,Look up order; check policy; calculate; deny,Delivery was within 45 minutes.
-S5,denied,denied,True,0.0,0.0,3,1,2,4,Look up order; check policy; deny,Only completed orders can be refunded.
-S6,order_not_found,order_not_found,True,0.0,0.0,1,1,1,3,Look up order; stop if missing,The order could not be found in SQLite.
-S7,step_limit,step_limit,True,0.0,0.0,6,1,4,6,Detect repeated action; stop safely,Repeated-action scenario stopped by the maximum-step guard.
+scenario_id,react_status,plan_execute_status,outcome_match,react_refund_inr,plan_execute_refund_inr,react_model_calls,react_tokens_used,react_tool_steps,plan_execute_planning_steps,plan_execute_tool_calls,plan_execute_total_steps,planned_actions,explanation
+S1,REFUND,REFUND,True,128.25,128.25,5,1465,4,1,4,6,Look up order; retrieve policy; calculate; validate; simulate refund,Refund qualifies under the demo rules. No ledger entry is written by this comparison.
+S2,REFUND,REFUND,True,135.0,135.0,5,1465,4,1,4,6,Look up order; retrieve policy; calculate; validate; simulate refund,Refund qualifies under the demo rules. No ledger entry is written by this comparison.
+S3,ESCALATE,ESCALATE,True,1999.0,1999.0,5,1451,4,1,3,5,Look up order; retrieve policy; calculate; escalate,"Eligible refund exceeds INR 1,000."
+S4,DENIED,DENIED,True,0.0,0.0,4,1047,3,1,3,5,Look up order; retrieve policy; calculate; deny,Delivery time was not greater than 45 minutes.
+S5,DENIED,DENIED,True,0.0,0.0,3,658,2,1,2,4,Look up order; check policy; deny,Only completed orders are eligible.
+S6,NOT_FOUND,NOT_FOUND,True,0.0,0.0,2,286,1,1,1,3,Look up order; stop if missing,The order was not found in SQLite.
+S7,FALLBACK_MAX_ITERATIONS,FALLBACK_MAX_ITERATIONS,True,0.0,0.0,6,3702,6,1,4,6,Detect repeated action; stop safely,The planned execution was stopped by the maximum-iteration guard.

@@ -2,8 +2,9 @@ metric,react,plan_execute
 Scenarios compared,7.0,7.0
 Matching outcome statuses,7.0,7.0
 Outcome match rate (%),100.0,100.0
-Average ReAct loop turns,4.14,
-Average Plan-and-Execute total steps,,5.0
+Total ReAct model calls,30.0,
+Total ReAct tokens,10074.0,
+Average Plan-and-Execute steps,,5.0
 Automatic refund outcomes,2.0,2.0
-Human-review outcomes,1.0,1.0
-Safe loop stops,1.0,1.0
+Human escalation outcomes,1.0,1.0
+Maximum-iteration fallbacks,1.0,1.0

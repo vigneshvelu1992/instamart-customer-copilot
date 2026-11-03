@@ -1,8 +1,8 @@
-scenario_id,status,order_id,refund_inr,agent_response,tool_steps
-S1,refund_response,ORD-100048,128.25,REFUND: INR 128.25 issued.,5
-S2,refund_response,ORD-100067,135.0,REFUND: INR 135.0 issued.,5
-S3,human_review,ORD-100145,1999.0,ESCALATE: refund above INR 1000 sent to a human lead.,5
-S4,denied,ORD-100001,0.0,DENIED: delivery was within 45 minutes.,4
-S5,denied,ORD-100025,0.0,DENIED: only completed orders can be refunded.,3
-S6,order_not_found,ORD-999999,0.0,NOT_FOUND: no such order.,1
-S7,step_limit,,0.0,SAFE_STOP: maximum agent steps reached.,6
+scenario_id,run_id,status,order_id,agent_response,refund_inr,tool_steps,llm_calls,tokens_used
+S1,S1_crash_resume_demo,REFUND,ORD-100048,REFUND: INR 128.25 issued.,128.25,4,5,1465
+S2,scenario_S2,REFUND,ORD-100067,REFUND: INR 135.0 issued.,135.0,4,5,1465
+S3,scenario_S3,ESCALATE,ORD-100145,ESCALATE: refund above INR 1000 sent to a human lead.,1999.0,4,5,1451
+S4,scenario_S4,DENIED,ORD-100001,DENIED: delivery was within 45 minutes.,0.0,3,4,1047
+S5,scenario_S5,DENIED,ORD-100025,DENIED: only completed orders can be refunded.,0.0,2,3,658
+S6,scenario_S6,NOT_FOUND,,NOT_FOUND: no such order.,0.0,1,2,286
+S7,scenario_S7,FALLBACK_MAX_ITERATIONS,,FALLBACK_MAX_ITERATIONS: The agent reached the maximum number of iterations. Human review is required.,0.0,6,6,3702

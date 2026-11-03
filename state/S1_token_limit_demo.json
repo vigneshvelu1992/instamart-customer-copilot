@@ -1,0 +1,62 @@
+{
+  "run_id": "S1_token_limit_demo",
+  "scenario_id": "S1_TOKEN_LIMIT_DEMO",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an Instamart refund AGENT. Use the available tools to verify orders, retrieve policy, calculate refunds, issue eligible refunds, or escalate high-value refunds. Only completed orders are eligible. A delivery must exceed 45 minutes for a refund. Refunds above INR 1,000 must be escalated. Do not invent order information. If an order is missing, return NOT_FOUND. If an order is ineligible, return DENIED. If the process cannot safely finish, return a FALLBACK status. Your final response must begin with one of these statuses: REFUND, ESCALATE, DENIED, NOT_FOUND, FALLBACK_MAX_ITERATIONS, FALLBACK_TOKEN_LIMIT, or FALLBACK_TIMEOUT."
+    },
+    {
+      "role": "user",
+      "content": "My order ORD-100048 reached me very late. I would like a refund."
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "call_1",
+          "name": "get_order",
+          "arguments": {
+            "order_id": "ORD-100048"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "call_1",
+      "name": "get_order",
+      "content": "{\"order_id\": \"ORD-100048\", \"status\": \"completed\", \"order_amount\": 128.25, \"delivery_minutes\": 65.0}"
+    }
+  ],
+  "tokens_used": 146,
+  "llm_calls": 1,
+  "step_number": 1,
+  "tools_executed": [
+    "get_order"
+  ],
+  "steps": [
+    {
+      "step_number": 1,
+      "tool": "get_order",
+      "arguments": {
+        "order_id": "ORD-100048"
+      },
+      "observation": {
+        "order_id": "ORD-100048",
+        "status": "completed",
+        "order_amount": 128.25,
+        "delivery_minutes": 65.0
+      }
+    }
+  ],
+  "last_order": {
+    "order_id": "ORD-100048",
+    "status": "completed",
+    "order_amount": 128.25,
+    "delivery_minutes": 65.0
+  },
+  "max_iterations": 6,
+  "token_limit": 200,
+  "time_limit_seconds": 10.0
+}
