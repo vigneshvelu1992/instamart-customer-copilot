@@ -1,0 +1,62 @@
+{
+  "next_index": 7,
+  "completed_results": [
+    {
+      "scenario_id": "S1",
+      "status": "refund_response",
+      "order_id": "ORD-100048",
+      "refund_inr": 128.25,
+      "agent_response": "REFUND: INR 128.25 issued.",
+      "tool_steps": 5
+    },
+    {
+      "scenario_id": "S2",
+      "status": "refund_response",
+      "order_id": "ORD-100067",
+      "refund_inr": 135.0,
+      "agent_response": "REFUND: INR 135.0 issued.",
+      "tool_steps": 5
+    },
+    {
+      "scenario_id": "S3",
+      "status": "human_review",
+      "order_id": "ORD-100145",
+      "refund_inr": 1999.0,
+      "agent_response": "ESCALATE: refund above INR 1000 sent to a human lead.",
+      "tool_steps": 5
+    },
+    {
+      "scenario_id": "S4",
+      "status": "denied",
+      "order_id": "ORD-100001",
+      "refund_inr": 0.0,
+      "agent_response": "DENIED: delivery was within 45 minutes.",
+      "tool_steps": 4
+    },
+    {
+      "scenario_id": "S5",
+      "status": "denied",
+      "order_id": "ORD-100025",
+      "refund_inr": 0.0,
+      "agent_response": "DENIED: only completed orders can be refunded.",
+      "tool_steps": 3
+    },
+    {
+      "scenario_id": "S6",
+      "status": "order_not_found",
+      "order_id": "ORD-999999",
+      "refund_inr": 0.0,
+      "agent_response": "NOT_FOUND: no such order.",
+      "tool_steps": 1
+    },
+    {
+      "scenario_id": "S7",
+      "status": "step_limit",
+      "order_id": "",
+      "refund_inr": 0.0,
+      "agent_response": "SAFE_STOP: maximum agent steps reached.",
+      "tool_steps": 6
+    }
+  ],
+  "crash_simulated": true
+}

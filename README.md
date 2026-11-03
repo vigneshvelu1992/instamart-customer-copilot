@@ -501,3 +501,99 @@ The pipeline automatically validates input length, redaction, response format, a
 - `outputs/triage_results.csv`
 - `outputs/triage_budget_demo.csv`
 - `outputs/triage_retry.log`
+
+## Part D: Policy RAG and Refund Agent
+
+### 1. Policy document retrieval (RAG)
+
+Created a policy question-answering workflow using five policy documents:
+
+- Delivery policy
+- Escalation policy
+- Payment policy
+- Privacy policy
+- Refund policy
+
+Implementation:
+- Split policy documents into word-based chunks.
+- Tested chunk size of 40 words with 10-word overlap.
+- Compared overlapping chunks against non-overlapping chunks.
+- Used TF-IDF retrieval to find relevant policy passages.
+- Used the supplied local `mock_llm.py` for policy answers.
+- Evaluated both approaches against 14 policy questions.
+- Out-of-scope questions return a response indicating that the policy documents do not contain the requested information.
+
+Chunking experiment:
+
+| Experiment | Chunks | Evaluation questions | Response tokens |
+|---|---:|---:|---:|
+| 40 words, 10-word overlap | 15 | 14 | 3,254 |
+| 40 words, no overlap | 13 | 14 | 3,190 |
+
+The overlapping approach produced two additional chunks and used 64 more response tokens in this experiment. Some retrieved answers contain text-boundary and repetition artifacts. Sentence-aware chunking and improved answer formatting are potential future improvements.
+
+### 2. Refund agent
+
+Implemented a simulated refund agent using the supplied local LLM mock and project data.
+
+The agent:
+- Reads order and customer information from the local SQLite database.
+- Retrieves relevant refund policy information.
+- Checks order status and delivery time.
+- Applies the automatic refund limit of INR 1,000.
+- Escalates refunds above INR 1,000 for human review.
+- Records simulated refund actions in a CSV ledger.
+- Uses checkpoints and trace logs to support crash recovery and debugging.
+- Applies a maximum-step guard to prevent infinite agent loops.
+
+Scenario results:
+
+| Scenario | Outcome | Refund amount |
+|---|---|---:|
+| S1 | Refund issued | INR 128.25 |
+| S2 | Refund issued | INR 135.00 |
+| S3 | Escalated for human review | INR 1,999.00 |
+| S4 | Denied: delivery within 45 minutes | INR 0 |
+| S5 | Denied: order not completed | INR 0 |
+| S6 | Order not found | INR 0 |
+| S7 | Safely stopped by maximum-step guard | INR 0 |
+
+All refund actions are simulated. No real payment or financial transaction is performed. The human-review amount is not an issued refund.
+
+### 3. ReAct vs Plan-and-Execute comparison
+
+Compared the ReAct refund agent outcomes with a deterministic, read-only Plan-and-Execute simulation across seven scenarios.
+
+- Scenarios evaluated: 7
+- Matching outcome statuses: 7
+- Status match rate: 100%
+- Average ReAct loop turns: 4.14
+- Average Plan-and-Execute total steps: 5.00
+
+The Plan-and-Execute implementation is a deterministic simulation, not a second LLM agent with equivalent token accounting. Therefore, the step counts should not be interpreted as a direct performance or cost comparison.
+
+### 4. Part D output files
+
+Policy RAG:
+- `outputs/policy_chunks_overlap.csv`
+- `outputs/policy_chunks_no_overlap.csv`
+- `outputs/policy_retrieval_results.csv`
+- `outputs/policy_eval_overlap.csv`
+- `outputs/policy_eval_no_overlap.csv`
+- `outputs/policy_chunk_comparison.csv`
+
+Refund agent:
+- `outputs/refund_agent_results.csv`
+- `outputs/simulated_refund_ledger.csv`
+- `outputs/refund_agent_checkpoint.json`
+- `outputs/refund_agent_trace.jsonl`
+
+Architecture comparison:
+- `outputs/agent_architecture_comparison.csv`
+- `outputs/agent_architecture_summary.csv`
+
+Part D source scripts:
+- `src/part_d_policy.py`
+- `src/part_d_refund_agent.py`
+- `src/part_d_agent_comparison.py`
+
