@@ -407,3 +407,97 @@ Scenario results, fallback demonstrations and crash-resume results will be docum
 - Run the complete project from a clean clone to verify reproducibility.
 - Review the final repository contents and all required deliverables before submission.
 
+
+## Part C — Support Ticket Triage with Guardrails
+
+### Objective
+
+Built an offline support-ticket triage pipeline using the supplied `mock_llm.py`. The pipeline classifies customer tickets, protects personally identifiable information (PII), validates model responses, retries transient errors, enforces a token budget, and routes tickets to the appropriate support team.
+
+### Input guardrails and PII protection
+
+Processed 164 tickets in their original input order.
+
+- **Empty tickets:** 4 skipped without a model call.
+- **Long tickets:** 4 flagged for review because their estimated input length exceeded the 400-token limit.
+- **Eligible tickets:** 156.
+- **PII redaction:** 55 email addresses, 91 phone numbers, and 132 order IDs replaced with placeholders — 278 matches in total.
+- **PII verification:** Zero matching email, phone, or order-ID patterns remained in the redacted ticket text.
+
+The user message sent to the model contains only the redacted ticket text. The supplied `mock_llm.py` was not modified, and no external LLM API was used.
+
+### Prompting and response validation
+
+Compared zero-shot and few-shot classification. Both prompts require JSON-only output with one of four categories: `billing`, `delivery`, `technical`, or `fraud`. The few-shot prompt includes labeled examples, including a fraud example.
+
+Every response is validated. Valid JSON categories receive `classified_json`; responses containing exactly one identifiable allowed category word receive `classified_keyword`; ambiguous or unsupported outputs receive `flagged_invalid_output` and are sent for human review.
+
+| Final few-shot status | Tickets |
+|---|---:|
+| `classified_json` | 135 |
+| `classified_keyword` | 12 |
+| `flagged_invalid_output` | 9 |
+| `skipped_empty` | 4 |
+| `flagged_long` | 4 |
+| **Total** | **164** |
+
+### Zero-shot versus few-shot results
+
+| Metric | Zero-shot | Few-shot |
+|---|---:|---:|
+| Tickets classified | 147 | 147 |
+| Correct classifications | 126 | 147 |
+| Accuracy on classified tickets | 85.7% | 100.0% |
+| Total response tokens | 16,108 | 29,056 |
+| Tokens per classified ticket | 109.58 | 197.66 |
+
+The zero-shot confusion table showed 11 fraud tickets incorrectly classified as billing and 10 technical tickets incorrectly classified as billing. Few-shot prompting correctly classified all 147 tickets that received a usable category in this benchmark. It consumed approximately 80.4% more response tokens than zero-shot, but improved measured accuracy by 14.3 percentage points. These results describe the supplied offline mock benchmark, not a guarantee of equivalent accuracy on real-world tickets.
+
+### Retry handling
+
+Each model call is protected by retry handling for transient errors, with up to three retries and exponential backoff with jitter. The mock raised 19 transient errors in each full-budget run; all were recovered. The budget demonstration stopped before exhausting the retry allowance for any ticket.
+
+Retry events are saved to `outputs/triage_retry.log`.
+
+### Token-budget demonstration
+
+The zero-shot budget demonstration used a 6,000-token threshold.
+
+- Tickets classified: 56.
+- Tickets marked `budget_exhausted`: 97.
+- Output: `outputs/triage_budget_demo.csv` (164 rows).
+
+The final successful response can take the running token total above the threshold when the call began below it. Subsequent calls are blocked once the running total reaches or exceeds the budget.
+
+### Final routing
+
+The final deliverable is `outputs/triage_results.csv`, containing 164 rows and these columns:
+
+`ticket_id, customer_id, status, category, segment_name, priority, route, tokens_used`
+
+| Route | Tickets |
+|---|---:|
+| `support_queue` | 102 |
+| `security_team` | 34 |
+| `human_review` | 17 |
+| `premium_desk` | 11 |
+| **Total** | **164** |
+
+Routing uses explicit, rule-based conditions:
+
+- Empty, long, invalid-output, budget-exhausted, and permanent-error statuses are routed to `human_review` with `NORMAL` priority.
+- Fraud tickets are routed to `security_team` with `HIGH` priority.
+- Other classified tickets whose customer is marked premium in the Part B segmentation output are routed to `premium_desk` with `HIGH` priority.
+- Remaining classified tickets are routed to `support_queue` with `NORMAL` priority.
+- Customers without a matching segmentation record are treated as non-premium.
+
+### Rule validation versus human review
+
+The pipeline automatically validates input length, redaction, response format, allowed categories, token-budget state, and routing conditions. These checks enforce the defined rules; they do not independently prove that every classification is correct. Tickets with empty or excessive-length input, ambiguous or invalid model responses, exhausted budget, or unrecovered model errors require human review. Fraud classifications are routed to the security team for appropriate handling.
+
+### Part C deliverables
+
+- `src/part_c_triage.py`
+- `outputs/triage_results.csv`
+- `outputs/triage_budget_demo.csv`
+- `outputs/triage_retry.log`

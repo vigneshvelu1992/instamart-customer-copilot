@@ -1,0 +1,72 @@
+
+[zero-shot evaluation]
+ticket_id=T0002 retry=1 wait=0.0530s
+ticket_id=T0116 retry=1 wait=0.0453s
+ticket_id=T0153 retry=1 wait=0.0484s
+ticket_id=T0039 retry=1 wait=0.0478s
+ticket_id=T0152 retry=1 wait=0.0542s
+ticket_id=T0043 retry=1 wait=0.0535s
+ticket_id=T0111 retry=1 wait=0.0562s
+ticket_id=T0155 retry=1 wait=0.0461s
+ticket_id=T0100 retry=1 wait=0.0503s
+ticket_id=T0068 retry=1 wait=0.0454s
+ticket_id=T0135 retry=1 wait=0.0477s
+ticket_id=T0009 retry=1 wait=0.0513s
+ticket_id=T0067 retry=1 wait=0.0453s
+ticket_id=T0106 retry=1 wait=0.0475s
+ticket_id=T0097 retry=1 wait=0.0531s
+ticket_id=T0003 retry=1 wait=0.0518s
+ticket_id=T0019 retry=1 wait=0.0478s
+ticket_id=T0086 retry=1 wait=0.0524s
+ticket_id=T0065 retry=1 wait=0.0551s
+
+[few-shot evaluation]
+ticket_id=T0002 retry=1 wait=0.0451s
+ticket_id=T0116 retry=1 wait=0.0551s
+ticket_id=T0153 retry=1 wait=0.0537s
+ticket_id=T0039 retry=1 wait=0.0493s
+ticket_id=T0152 retry=1 wait=0.0469s
+ticket_id=T0043 retry=1 wait=0.0570s
+ticket_id=T0111 retry=1 wait=0.0492s
+ticket_id=T0155 retry=1 wait=0.0462s
+ticket_id=T0100 retry=1 wait=0.0462s
+ticket_id=T0068 retry=1 wait=0.0556s
+ticket_id=T0135 retry=1 wait=0.0525s
+ticket_id=T0009 retry=1 wait=0.0551s
+ticket_id=T0067 retry=1 wait=0.0541s
+ticket_id=T0106 retry=1 wait=0.0517s
+ticket_id=T0097 retry=1 wait=0.0572s
+ticket_id=T0003 retry=1 wait=0.0497s
+ticket_id=T0019 retry=1 wait=0.0519s
+ticket_id=T0086 retry=1 wait=0.0554s
+ticket_id=T0065 retry=1 wait=0.0527s
+
+[budget demonstration]
+ticket_id=T0002 retry=1 wait=0.0558s
+ticket_id=T0116 retry=1 wait=0.0522s
+ticket_id=T0153 retry=1 wait=0.0538s
+ticket_id=T0039 retry=1 wait=0.0456s
+ticket_id=T0152 retry=1 wait=0.0478s
+ticket_id=T0043 retry=1 wait=0.0486s
+ticket_id=T0111 retry=1 wait=0.0460s
+
+[final few-shot triage]
+ticket_id=T0002 retry=1 wait=0.0479s
+ticket_id=T0116 retry=1 wait=0.0463s
+ticket_id=T0153 retry=1 wait=0.0485s
+ticket_id=T0039 retry=1 wait=0.0529s
+ticket_id=T0152 retry=1 wait=0.0496s
+ticket_id=T0043 retry=1 wait=0.0496s
+ticket_id=T0111 retry=1 wait=0.0476s
+ticket_id=T0155 retry=1 wait=0.0483s
+ticket_id=T0100 retry=1 wait=0.0567s
+ticket_id=T0068 retry=1 wait=0.0531s
+ticket_id=T0135 retry=1 wait=0.0526s
+ticket_id=T0009 retry=1 wait=0.0471s
+ticket_id=T0067 retry=1 wait=0.0541s
+ticket_id=T0106 retry=1 wait=0.0470s
+ticket_id=T0097 retry=1 wait=0.0497s
+ticket_id=T0003 retry=1 wait=0.0574s
+ticket_id=T0019 retry=1 wait=0.0530s
+ticket_id=T0086 retry=1 wait=0.0520s
+ticket_id=T0065 retry=1 wait=0.0536s
